@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -18,12 +20,14 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@storybook/nextjs": "^10.3.5",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "storybook": "^10.3.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
