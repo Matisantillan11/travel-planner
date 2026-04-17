@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import ActivitiesTab from "@/components/ActivitiesTab";
+import BookingsTab from "@/components/BookingsTab";
 
 type Activity = {
   id: string;
@@ -11,6 +12,16 @@ type Activity = {
   notes: string | null;
   isDone: boolean;
   position: number;
+};
+
+type BookingType = "FLIGHT" | "HOTEL" | "TRAIN" | "CAR" | "OTHER";
+
+type Booking = {
+  id: string;
+  type: BookingType;
+  startDatetime: string;
+  endDatetime: string | null;
+  notes: string | null;
 };
 
 type Destination = {
@@ -49,6 +60,8 @@ export default function DestinationCard({
   const [activeTab, setActiveTab] = useState<Tab>("todo");
   const [activities, setActivities] = useState<Activity[] | null>(null);
   const [loadingActivities, setLoadingActivities] = useState(false);
+  const [bookings, setBookings] = useState<Booking[] | null>(null);
+  const [loadingBookings, setLoadingBookings] = useState(false);
 
   const {
     attributes,
@@ -76,9 +89,21 @@ export default function DestinationCard({
     setLoadingActivities(false);
   }
 
+  async function loadBookings() {
+    if (bookings !== null) return;
+    setLoadingBookings(true);
+    const res = await fetch(`/api/destinations/${destination.id}/bookings`);
+    if (res.ok) {
+      const data: Booking[] = await res.json();
+      setBookings(data);
+    }
+    setLoadingBookings(false);
+  }
+
   function handleTabChange(tab: Tab) {
     setActiveTab(tab);
     if (tab === "todo") loadActivities();
+    if (tab === "bookings") loadBookings();
   }
 
   return (
@@ -173,9 +198,27 @@ export default function DestinationCard({
           </>
         )}
         {activeTab === "bookings" && (
-          <p className="text-sm text-gray-400 text-center py-4">
-            Bookings coming soon.
-          </p>
+          <>
+            {loadingBookings && (
+              <p className="text-sm text-gray-400 text-center py-4">
+                Loading…
+              </p>
+            )}
+            {!loadingBookings && bookings === null && (
+              <button
+                onClick={loadBookings}
+                className="w-full text-sm text-gray-400 py-4 hover:text-gray-600"
+              >
+                Click to load bookings
+              </button>
+            )}
+            {bookings !== null && (
+              <BookingsTab
+                destId={destination.id}
+                initialBookings={bookings}
+              />
+            )}
+          </>
         )}
       </div>
     </div>
