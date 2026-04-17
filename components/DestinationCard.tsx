@@ -35,6 +35,7 @@ type Props = {
   startDate: Date;
   onUpdateNights: (id: string, nights: number) => void;
   onRemove: (id: string) => void;
+  highlighted?: boolean;
 };
 
 type Tab = "todo" | "bookings";
@@ -56,6 +57,7 @@ export default function DestinationCard({
   startDate,
   onUpdateNights,
   onRemove,
+  highlighted = false,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("todo");
   const [activities, setActivities] = useState<Activity[] | null>(null);
@@ -110,7 +112,11 @@ export default function DestinationCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-zinc-900 dark:border-zinc-700"
+      className={`rounded-lg border bg-white shadow-sm dark:bg-zinc-900 transition-colors duration-300 ${
+        highlighted
+          ? "border-indigo-400 ring-2 ring-indigo-400/30 dark:border-indigo-400"
+          : "border-gray-200 dark:border-zinc-700"
+      }`}
     >
       {/* Card header */}
       <div className="flex items-start gap-3 p-4">

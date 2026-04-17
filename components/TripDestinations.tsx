@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import dynamic from "next/dynamic";
 import {
   DndContext,
   closestCenter,
@@ -19,6 +20,13 @@ import {
 import DestinationCard from "@/components/DestinationCard";
 import DestinationSearch from "@/components/DestinationSearch";
 
+const MapView = dynamic(() => import("@/components/MapView"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[400px] rounded-lg bg-zinc-800 animate-pulse border border-zinc-700" />
+  ),
+});
+
 type Destination = {
   id: string;
   name: string;
@@ -32,6 +40,8 @@ type Trip = {
   id: string;
   startDate: string;
 };
+
+type View = "list" | "map";
 
 function computeArrivalDate(tripStart: string, destinations: Destination[], index: number): Date {
   const d = new Date(tripStart);
@@ -49,11 +59,37 @@ export default function TripDestinations({
   initialDestinations: Destination[];
 }) {
   const [destinations, setDestinations] = useState(initialDestinations);
+  const [view, setView] = useState<View>("list");
+  const [highlightedDestId, setHighlightedDestId] = useState<string | null>(null);
+  const pendingScrollRef = useRef<string | null>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  // Scroll to card after marker click (fires when highlightedDestId or view changes)
+  useEffect(() => {
+    const id = pendingScrollRef.current;
+    if (!id) return;
+    pendingScrollRef.current = null;
+    const el = cardRefs.current[id];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [highlightedDestId, view]);
+
+  // Clear highlight after 2 s
+  useEffect(() => {
+    if (!highlightedDestId) return;
+    const timer = setTimeout(() => setHighlightedDestId(null), 2000);
+    return () => clearTimeout(timer);
+  }, [highlightedDestId]);
+
+  function handleMarkerClick(id: string) {
+    pendingScrollRef.current = id;
+    setHighlightedDestId(id);
+    setView("list");
+  }
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -124,28 +160,69 @@ export default function TripDestinations({
           <p className="text-sm mt-1">Search above to add your first stop.</p>
         </div>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={destinations.map((d) => d.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="flex flex-col gap-3">
-              {destinations.map((dest, idx) => (
-                <DestinationCard
-                  key={dest.id}
-                  destination={dest}
-                  startDate={computeArrivalDate(trip.startDate, destinations, idx)}
-                  onUpdateNights={handleUpdateNights}
-                  onRemove={handleRemove}
-                />
-              ))}
+        <>
+          {/* View toggle — mobile only */}
+          <div className="flex gap-1 lg:hidden">
+            {(["list", "map"] as View[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  view === v
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-zinc-800 dark:text-gray-400 dark:hover:bg-zinc-700"
+                }`}
+              >
+                {v === "list" ? "List" : "Map"}
+              </button>
+            ))}
+          </div>
+
+          {/* Content: side-by-side on lg+, toggled on mobile */}
+          <div className="lg:grid lg:grid-cols-2 lg:gap-4 lg:items-start">
+            {/* List panel */}
+            <div className={view === "map" ? "hidden lg:block" : ""}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={destinations.map((d) => d.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="flex flex-col gap-3">
+                    {destinations.map((dest, idx) => (
+                      <div
+                        key={dest.id}
+                        ref={(el) => {
+                          cardRefs.current[dest.id] = el;
+                        }}
+                      >
+                        <DestinationCard
+                          destination={dest}
+                          startDate={computeArrivalDate(trip.startDate, destinations, idx)}
+                          onUpdateNights={handleUpdateNights}
+                          onRemove={handleRemove}
+                          highlighted={highlightedDestId === dest.id}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             </div>
-          </SortableContext>
-        </DndContext>
+
+            {/* Map panel */}
+            <div className={`lg:sticky lg:top-4 ${view === "list" ? "hidden lg:block" : ""}`}>
+              <MapView
+                destinations={destinations}
+                onMarkerClick={handleMarkerClick}
+                highlightedId={highlightedDestId}
+              />
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
