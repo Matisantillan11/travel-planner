@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Storybook build output — not part of the Next.js app
     "storybook-static/**",
+    // Next.js auto-generated type files
+    "types/**",
   ]),
 ]);
 
