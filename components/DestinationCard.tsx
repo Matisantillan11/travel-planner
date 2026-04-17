@@ -1,7 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import ActivitiesTab from "@/components/ActivitiesTab";
+
+type Activity = {
+  id: string;
+  name: string;
+  notes: string | null;
+  isDone: boolean;
+  position: number;
+};
 
 type Destination = {
   id: string;
@@ -15,6 +25,8 @@ type Props = {
   onUpdateNights: (id: string, nights: number) => void;
   onRemove: (id: string) => void;
 };
+
+type Tab = "todo" | "bookings";
 
 function formatDateRange(start: Date, nights: number): string {
   const end = new Date(start);
@@ -34,6 +46,10 @@ export default function DestinationCard({
   onUpdateNights,
   onRemove,
 }: Props) {
+  const [activeTab, setActiveTab] = useState<Tab>("todo");
+  const [activities, setActivities] = useState<Activity[] | null>(null);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -49,13 +65,30 @@ export default function DestinationCard({
     opacity: isDragging ? 0.4 : 1,
   };
 
+  async function loadActivities() {
+    if (activities !== null) return;
+    setLoadingActivities(true);
+    const res = await fetch(`/api/destinations/${destination.id}/activities`);
+    if (res.ok) {
+      const data: Activity[] = await res.json();
+      setActivities(data);
+    }
+    setLoadingActivities(false);
+  }
+
+  function handleTabChange(tab: Tab) {
+    setActiveTab(tab);
+    if (tab === "todo") loadActivities();
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:bg-zinc-900 dark:border-zinc-700"
+      className="rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-zinc-900 dark:border-zinc-700"
     >
-      <div className="flex items-start gap-3">
+      {/* Card header */}
+      <div className="flex items-start gap-3 p-4">
         <button
           {...attributes}
           {...listeners}
@@ -95,6 +128,55 @@ export default function DestinationCard({
             ✕
           </button>
         </div>
+      </div>
+
+      {/* Tab bar */}
+      <div className="flex border-t border-gray-100 dark:border-zinc-800">
+        {(["todo", "bookings"] as Tab[]).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => handleTabChange(tab)}
+            className={`flex-1 py-2 text-xs font-medium transition-colors ${
+              activeTab === tab
+                ? "border-b-2 border-black text-black dark:border-white dark:text-white"
+                : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300"
+            }`}
+          >
+            {tab === "todo" ? "Things to Do" : "Bookings"}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      <div className="p-4">
+        {activeTab === "todo" && (
+          <>
+            {loadingActivities && (
+              <p className="text-sm text-gray-400 text-center py-4">
+                Loading…
+              </p>
+            )}
+            {!loadingActivities && activities === null && (
+              <button
+                onClick={loadActivities}
+                className="w-full text-sm text-gray-400 py-4 hover:text-gray-600"
+              >
+                Click to load activities
+              </button>
+            )}
+            {activities !== null && (
+              <ActivitiesTab
+                destId={destination.id}
+                initialActivities={activities}
+              />
+            )}
+          </>
+        )}
+        {activeTab === "bookings" && (
+          <p className="text-sm text-gray-400 text-center py-4">
+            Bookings coming soon.
+          </p>
+        )}
       </div>
     </div>
   );
