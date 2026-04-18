@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ROUTES, API_ROUTES } from "@/lib/routes";
 
 type TripCardProps = {
   id: string;
@@ -20,7 +21,7 @@ export default function TripCard({ id, name, startDate, updatedAt, _count }: Tri
   async function handleDelete() {
     setDeleting(true);
     try {
-      const res = await fetch(`/api/trips/${id}`, { method: "DELETE" });
+      const res = await fetch(API_ROUTES.TRIP(id), { method: "DELETE" });
       if (!res.ok) {
         setConfirming(false);
         setDeleting(false);
@@ -48,7 +49,7 @@ export default function TripCard({ id, name, startDate, updatedAt, _count }: Tri
 
   return (
     <div className="relative rounded-lg border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow dark:bg-zinc-900 dark:border-zinc-700">
-      <Link href={`/trips/${id}`} className="block mb-3">
+      <Link href={ROUTES.TRIP(id)} className="block mb-3">
         <h2 className="font-semibold text-lg leading-tight mb-1 hover:underline">
           {name}
         </h2>
