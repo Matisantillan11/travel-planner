@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_ROUTES } from "@/lib/routes";
 
 export default function NewTripModal() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function NewTripModal() {
     setSubmitting(true);
     setError(null);
 
-    const res = await fetch("/api/trips", {
+    const res = await fetch(API_ROUTES.TRIPS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: name.trim(), startDate }),
