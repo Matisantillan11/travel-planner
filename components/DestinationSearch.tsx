@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { API_ROUTES } from "@/lib/routes";
 
 type GeoFeature = {
   id: string;
@@ -35,7 +36,7 @@ export default function DestinationSearch({
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+      const res = await fetch(API_ROUTES.GEOCODE(q));
       const data = await res.json();
       const features: GeoFeature[] = data.features ?? [];
       setResults(features);

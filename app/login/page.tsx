@@ -1,6 +1,7 @@
 import { signIn } from "@/auth";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { ROUTES } from "@/lib/routes";
 
 export default async function LoginPage({
   searchParams,
@@ -10,12 +11,12 @@ export default async function LoginPage({
   const session = await auth();
 
   if (session) {
-    redirect("/dashboard");
+    redirect(ROUTES.DASHBOARD);
   }
 
   const { callbackUrl } = await searchParams;
   const redirectTo =
-    typeof callbackUrl === "string" ? callbackUrl : "/dashboard";
+    typeof callbackUrl === "string" ? callbackUrl : ROUTES.DASHBOARD;
 
   return (
     <main className="flex min-h-screen items-center justify-center">

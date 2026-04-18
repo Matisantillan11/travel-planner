@@ -5,6 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import ActivitiesTab from "@/components/ActivitiesTab";
 import BookingsTab from "@/components/BookingsTab";
+import { API_ROUTES } from "@/lib/routes";
 
 type Activity = {
   id: string;
@@ -83,7 +84,7 @@ export default function DestinationCard({
   async function loadActivities() {
     if (activities !== null) return;
     setLoadingActivities(true);
-    const res = await fetch(`/api/destinations/${destination.id}/activities`);
+    const res = await fetch(API_ROUTES.DESTINATION_ACTIVITIES(destination.id));
     if (res.ok) {
       const data: Activity[] = await res.json();
       setActivities(data);
@@ -94,7 +95,7 @@ export default function DestinationCard({
   async function loadBookings() {
     if (bookings !== null) return;
     setLoadingBookings(true);
-    const res = await fetch(`/api/destinations/${destination.id}/bookings`);
+    const res = await fetch(API_ROUTES.DESTINATION_BOOKINGS(destination.id));
     if (res.ok) {
       const data: Booking[] = await res.json();
       setBookings(data);

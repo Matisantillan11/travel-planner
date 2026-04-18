@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ActivityItem from "@/components/ActivityItem";
+import { API_ROUTES } from "@/lib/routes";
 
 type Activity = {
   id: string;
@@ -26,7 +27,7 @@ export default function ActivitiesTab({
     const name = newName.trim();
     if (!name) return;
     setAdding(true);
-    const res = await fetch(`/api/destinations/${destId}/activities`, {
+    const res = await fetch(API_ROUTES.DESTINATION_ACTIVITIES(destId), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -43,7 +44,7 @@ export default function ActivitiesTab({
     setActivities((prev) =>
       prev.map((a) => (a.id === id ? { ...a, isDone } : a))
     );
-    await fetch(`/api/destinations/${destId}/activities/${id}`, {
+    await fetch(API_ROUTES.DESTINATION_ACTIVITY(destId, id), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isDone }),
@@ -52,7 +53,7 @@ export default function ActivitiesTab({
 
   async function handleEdit(id: string, name: string) {
     setActivities((prev) => prev.map((a) => (a.id === id ? { ...a, name } : a)));
-    await fetch(`/api/destinations/${destId}/activities/${id}`, {
+    await fetch(API_ROUTES.DESTINATION_ACTIVITY(destId, id), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -60,7 +61,7 @@ export default function ActivitiesTab({
   }
 
   async function handleDelete(id: string) {
-    const res = await fetch(`/api/destinations/${destId}/activities/${id}`, {
+    const res = await fetch(API_ROUTES.DESTINATION_ACTIVITY(destId, id), {
       method: "DELETE",
     });
     if (res.ok) {

@@ -19,6 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import DestinationCard from "@/components/DestinationCard";
 import DestinationSearch from "@/components/DestinationSearch";
+import { API_ROUTES } from "@/lib/routes";
 
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
@@ -104,7 +105,7 @@ export default function TripDestinations({
 
     setDestinations(reordered);
 
-    await fetch(`/api/trips/${trip.id}/destinations/reorder`, {
+    await fetch(API_ROUTES.TRIP_DESTINATIONS_REORDER(trip.id), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: reordered.map((d) => d.id) }),
@@ -117,7 +118,7 @@ export default function TripDestinations({
     lat: number;
     lng: number;
   }) {
-    const res = await fetch(`/api/trips/${trip.id}/destinations`, {
+    const res = await fetch(API_ROUTES.TRIP_DESTINATIONS(trip.id), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...place, nights: 1 }),
@@ -131,7 +132,7 @@ export default function TripDestinations({
     setDestinations((prev) =>
       prev.map((d) => (d.id === destId ? { ...d, nights } : d))
     );
-    await fetch(`/api/trips/${trip.id}/destinations/${destId}`, {
+    await fetch(API_ROUTES.TRIP_DESTINATION(trip.id, destId), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nights }),
@@ -139,7 +140,7 @@ export default function TripDestinations({
   }
 
   async function handleRemove(destId: string) {
-    const res = await fetch(`/api/trips/${trip.id}/destinations/${destId}`, {
+    const res = await fetch(API_ROUTES.TRIP_DESTINATION(trip.id, destId), {
       method: "DELETE",
     });
     if (!res.ok) return;
