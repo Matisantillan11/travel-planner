@@ -4,6 +4,7 @@ import { canRead } from "@/lib/permissions";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import TripDestinations from "@/components/TripDestinations";
+import { ROUTES } from "@/lib/routes";
 
 export default async function TripPage({
   params,
@@ -11,7 +12,7 @@ export default async function TripPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!session) redirect("/login");
+  if (!session) redirect(ROUTES.LOGIN);
 
   const { id } = await params;
 
@@ -22,7 +23,7 @@ export default async function TripPage({
 
   if (!trip) notFound();
 
-  if (!(await canRead(id, session.user.id))) redirect("/dashboard");
+  if (!(await canRead(id, session.user.id))) redirect(ROUTES.DASHBOARD);
 
   const formattedStart = trip.startDate.toLocaleDateString("en-US", {
     month: "long",
@@ -35,7 +36,7 @@ export default async function TripPage({
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="mb-6">
           <Link
-            href="/dashboard"
+            href={ROUTES.DASHBOARD}
             className="text-sm text-gray-500 hover:underline"
           >
             ← My Trips

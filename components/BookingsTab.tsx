@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import BookingCard from "@/components/BookingCard";
+import { API_ROUTES } from "@/lib/routes";
 
 type BookingType = "FLIGHT" | "HOTEL" | "TRAIN" | "CAR" | "OTHER";
 
@@ -53,7 +54,7 @@ export default function BookingsTab({
   async function handleAdd() {
     if (!formStart) return;
     setAdding(true);
-    const res = await fetch(`/api/destinations/${destId}/bookings`, {
+    const res = await fetch(API_ROUTES.DESTINATION_BOOKINGS(destId), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -90,7 +91,7 @@ export default function BookingsTab({
             new Date(b.startDatetime).getTime()
         )
     );
-    await fetch(`/api/destinations/${destId}/bookings/${id}`, {
+    await fetch(API_ROUTES.DESTINATION_BOOKING(destId, id), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -98,7 +99,7 @@ export default function BookingsTab({
   }
 
   async function handleDelete(id: string) {
-    const res = await fetch(`/api/destinations/${destId}/bookings/${id}`, {
+    const res = await fetch(API_ROUTES.DESTINATION_BOOKING(destId, id), {
       method: "DELETE",
     });
     if (res.ok) {

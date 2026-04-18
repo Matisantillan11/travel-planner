@@ -5,6 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import ActivitiesTab from "@/components/ActivitiesTab";
 import BookingsTab from "@/components/BookingsTab";
+import { API_ROUTES } from "@/lib/routes";
 
 type Activity = {
   id: string;
@@ -35,6 +36,7 @@ type Props = {
   startDate: Date;
   onUpdateNights: (id: string, nights: number) => void;
   onRemove: (id: string) => void;
+  highlighted?: boolean;
 };
 
 type Tab = "todo" | "bookings";
@@ -56,6 +58,7 @@ export default function DestinationCard({
   startDate,
   onUpdateNights,
   onRemove,
+  highlighted = false,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("todo");
   const [activities, setActivities] = useState<Activity[] | null>(null);
@@ -81,7 +84,7 @@ export default function DestinationCard({
   async function loadActivities() {
     if (activities !== null) return;
     setLoadingActivities(true);
-    const res = await fetch(`/api/destinations/${destination.id}/activities`);
+    const res = await fetch(API_ROUTES.DESTINATION_ACTIVITIES(destination.id));
     if (res.ok) {
       const data: Activity[] = await res.json();
       setActivities(data);
@@ -92,7 +95,7 @@ export default function DestinationCard({
   async function loadBookings() {
     if (bookings !== null) return;
     setLoadingBookings(true);
-    const res = await fetch(`/api/destinations/${destination.id}/bookings`);
+    const res = await fetch(API_ROUTES.DESTINATION_BOOKINGS(destination.id));
     if (res.ok) {
       const data: Booking[] = await res.json();
       setBookings(data);
@@ -110,7 +113,11 @@ export default function DestinationCard({
     <div
       ref={setNodeRef}
       style={style}
-      className="rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-zinc-900 dark:border-zinc-700"
+      className={`rounded-lg border bg-white shadow-sm dark:bg-zinc-900 transition-colors duration-300 ${
+        highlighted
+          ? "border-indigo-400 ring-2 ring-indigo-400/30 dark:border-indigo-400"
+          : "border-gray-200 dark:border-zinc-700"
+      }`}
     >
       {/* Card header */}
       <div className="flex items-start gap-3 p-4">
