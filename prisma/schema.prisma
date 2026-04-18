@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String             @id @default(cuid())
+  provider          String
+  providerAccountId String
+  email             String             @unique
+  name              String?
+  image             String?
+  createdAt         DateTime           @default(now())
+  trips             Trip[]
+  collaborations    TripCollaborator[]
+
+  @@unique([provider, providerAccountId])
+}
+
+model Trip {
+  id            String             @id @default(cuid())
+  ownerId       String
+  name          String
+  startDate     DateTime           @db.Date
+  shareToken    String?            @unique
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  owner         User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  collaborators TripCollaborator[]
+  destinations  Destination[]
+
+  @@index([ownerId])
+}
+
+enum CollaboratorRole {
+  EDITOR
+  VIEWER_LINK
+}
+
+model TripCollaborator {
+  id     String           @id @default(cuid())
+  tripId String
+  userId String
+  role   CollaboratorRole
+  trip   Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
+  @@index([userId])
+}
+
+model Destination {
+  id            String     @id @default(cuid())
+  tripId        String
+  position      Int
+  name          String
+  mapboxPlaceId String?
+  lat           Float
+  lng           Float
+  nights        Int
+  createdAt     DateTime   @default(now())
+  trip          Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activities    Activity[]
+  bookings      Booking[]
+
+  @@index([tripId])
+}
+
+model Activity {
+  id            String      @id @default(cuid())
+  destinationId String
+  name          String
+  notes         String?
+  isDone        Boolean     @default(false)
+  position      Int
+  createdAt     DateTime    @default(now())
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@index([destinationId])
+}
+
+enum BookingType {
+  FLIGHT
+  HOTEL
+  TRAIN
+  CAR
+  OTHER
+}
+
+model Booking {
+  id            String              @id @default(cuid())
+  destinationId String
+  type          BookingType
+  startDatetime DateTime
+  endDatetime   DateTime?
+  notes         String?
+  createdAt     DateTime            @default(now())
+  destination   Destination         @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  attachments   BookingAttachment[]
+
+  @@index([destinationId])
+}
+
+model BookingAttachment {
+  id         String   @id @default(cuid())
+  bookingId  String
+  filename   String
+  s3Key      String
+  fileSize   Int
+  uploadedAt DateTime @default(now())
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
