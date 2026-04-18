@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 import TripCard from "@/components/TripCard";
 import NewTripModal from "@/components/NewTripModal";
 
@@ -8,7 +9,7 @@ export const metadata = { title: "My Trips" };
 
 export default async function DashboardPage() {
   const session = await auth();
-  if (!session) redirect("/login");
+  if (!session) redirect(ROUTES.LOGIN);
 
   const trips = await prisma.trip.findMany({
     where: {

@@ -1,27 +1,30 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { ROUTES } from "@/lib/routes";
 
-// Protected route prefixes that require an authenticated session
-const PROTECTED_PREFIXES = ["/dashboard", "/trips"];
+const PUBLIC_PATHS: string[] = [ROUTES.LOGIN];
 
 export async function proxy(request: NextRequest) {
   const session = await auth();
   const { pathname } = request.nextUrl;
 
-  const isProtected = PROTECTED_PREFIXES.some((prefix) =>
-    pathname.startsWith(prefix)
-  );
+  const isPublic = PUBLIC_PATHS.includes(pathname);
+  const isApiRoute = pathname.startsWith("/api/");
 
-  if (isProtected && !session) {
-    const loginUrl = new URL("/login", request.url);
+  if (!session) {
+    if (isPublic) return NextResponse.next();
+    if (isApiRoute) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const loginUrl = new URL(ROUTES.LOGIN, request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect authenticated users away from the login page
-  if (pathname === "/login" && session) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Authenticated users visiting root or login → send to dashboard
+  if (pathname === ROUTES.ROOT || pathname === ROUTES.LOGIN) {
+    return NextResponse.redirect(new URL(ROUTES.DASHBOARD, request.url));
   }
 
   return NextResponse.next();
